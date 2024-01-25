@@ -10,3 +10,7 @@ This report offers valuable wisdom into the crime landscape of Toronto, with imp
 - Paper: Both the .pdf and the .Rmd files of the report can be found under /outputs/paper
 - References: The references are stored in a .bib file, found under /outputs/paper
 - R Scripts: The R scripts, used for importing and cleaning the data, can be found under /scripts 
+
+## LLM Statement
+No LLMs were utilized in the creation of this paper.
+
