@@ -1,0 +1,177 @@
+---
+title: "Beyond the Myth: A Comparative Analysis of Media Crime Reports and Actual Crime Statistics in Toronto"
+author: 
+  - Kelly Lyu
+thanks: "Code and data are available at: https://github.com/kelly-Lyu/Toronto_Reported_Crimes.git."
+date: "`r format(Sys.time(), '%d %B %Y')`"
+abstract: "This report offers crucial insights into Toronto's crime trends, which are indispensable for the daily decision-making processes of its residents. By examining crime data collected by Open Data Toronto, it accomplishes two primary objectives: firstly, it evaluates changes in police efficiency regarding crime resolution and analyzes crime patterns, including locations and types of crimes; secondly, it contrasts these actual crime statistics with how they are reported in the media. The findings indicate a decline in police effectiveness from 2014 to 2022, highlighting theft under $5000 as the most common crime, crime predominantly occurring in downtown Toronto. In contrast, media coverage implies an increase in police efficiency and inaccurately focuses on murder as the leading crime, wrongly implying that North York is as affected by crime as downtown."
+output:
+  bookdown::pdf_document2
+format: pdf
+toc: TRUE
+bibliography: references.bib
+---
+
+# 1. Introduction
+
+Every Halloween, the phenomenon of 'Halloween Sadism'---characterized by malevolent acts against children, such as the adulteration of candy or deliberate infliction of harm---emerges prominently in media narratives [@cite1]. These narratives often emphasize the perceived dangers posed by strangers to children during this holiday growing up; this stark contrast between ominous warnings and the absence of such incidents in my own experiences prompted a deeper investigation. The findings were enlightening: the ostensibly pervasive threat of Halloween Sadism is largely a mythological construct supported by scant empirical evidence [@cite1]. The few existing cases show only a tenuous connection to this supposed phenomenon, casting doubt on the narrative perpetuated by the media.
+
+This disparity between media portrayal and reality intrigued a broader inquiry: How accurately does the media depict criminal activity? With many relying on media as their primary source of crime-related knowledge, the impact of these portrayals on public perception and conduct is profound [@cite2]. Currently, there is no data on the detailed difference between media portray and real crime statistics, especially in Toronto. Employing the Open Data Toronto dataset, this paper analyzes reported crime statistics from 2014 to 2022, contrasting them with media representations to explain the state of crime in Toronto.
+
+The remaining part of the paper proceeds as follows: data, graph, discussion, and conclusion. The data section begins by focusing on the dataset sourced from the City of Toronto's Open Data Toronto Library, detailing the explanation of the variable in the dataset, as well as the data cleaning and analysis processes undertaken. The graph section gives an illustration of crime types, their geographical distribution, and trends in crime resolution rates, supported by visual graphs. Notably, it was found that police efficiency in solving crime decreased, and the most common crime type is theft under \$5000; crime primarily occurred in Toronto's downtown area. The Discussion section discusses the discrepancies between the crime data and media reports. Finally, the paper outlines its key findings, underscoring the gap between media representations and actual crime statistics in Toronto, stating the limitations of these studies, and advising future focus.
+
+# 2. Data
+
+## Data Source and Collection
+
+We utilized a detailed dataset from Toronto Police Services featuring comprehensive crime records [@citeopendatatoronto]. This dataset includes every reported crime in Toronto, with 33,343 entries across key columns like ID, division, subtype, category, report year, crime count, and cleared count. Its latest update was on January 14, 2024, and we accessed it through the City of Toronto's Open Portal on January 18, 2024.
+
+The dataset's compliance with the Municipal Freedom of Information and Protection of Privacy Act (MFIPPA) aligns it with established legal standards. This legal compliance confirms that the dataset is managed and released under recognized regulations, concentrating on data accuracy and access - key elements that indicate its adherence to legal norms and enhance its trustworthiness. As this dataset separates theft into two categories by theft money amount, every crime is categorized precisely, minimizing subjective interpretation.
+
+Compared with alternative datasets, this one stands out for its complete coverage of crime-related data, especially its inclusion of cleared crime counts, which is pivotal for our analysis. It is the most recently updated dataset with a 100% quality score [@citeopendatatoronto]. Nonetheless, it's essential to consider potential biases: the dataset might include crimes reported in Quebec by Toronto residents because instead of specifying the location of the crime, it sets the location of the police division, which could distort the data. Furthermore, issues like under reporting in sensitive cases such as sexual assault need to be considered, which causes the dataset to not encompass all instances of criminal activity [@cite3].
+
+Data collection and analysis were executed using the statistical programming software R [@citeR], bolstered by the indispensable assistance of tidyverse [@citetidyverse], ggplot2 [@citeggplot2], lubridate [@citelubridate], knitr [@citeknitr] and kableExtra [@citeKableExtra]. A more exhaustive cleaning and analytical procedures will be supplied in subsequent sections of this paper. 
+
+## Data Cleaning
+
+Upon importing the dataset into our analytical environment, we clean start by selecting key columns pertinent to our research: division, subtype, report year, count cleared, and crime count. Next, we introduced two new columns to heighten our analysis. The first one, 'unsolved_crime,' quantifies the total unresolved crimes for each data entry, calculated as the difference between the total reported crimes and those cleared. The second, 'clearance_rate,' provides a crucial metric, representing the proportion of cleared crimes relative to the total crime count. Both these columns were transformed into integer values to ensure data clarity and precision. Then, We converted all column names to lowercase to improve their readability. These enhancements were integrated into the dataset, creating a refined version aptly labeled 'clean.'  Table 1 below shows the first six rows of the clean data. This file serves as a comprehensive record for future studies, embodying a clear and well-structured representation of Toronto's crime data. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+# Download the required package
+install.packages("opendatatoronto") # For getting data
+library(opendatatoronto)
+install.packages("tidyverse")
+library(tidyverse)
+install.packages("knitr")
+library(knitr)
+install.packages("ggplot2")
+library(ggplot2)
+install.packages("kableExtra")
+library(kableExtra)
+
+cleaned_data=read.csv("cleaned_toronto_shelters.csv")
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+# Summarize the 'clearance_rate'  by year
+yearly_summary <- cleaned_data %>%
+  group_by(report_year) %>%
+  summarise(
+    Total = sum(clearance_rate, na.rm = TRUE),
+    Mean = mean(clearance_rate, na.rm = TRUE))
+```
+
+
+```{r table1, echo=FALSE, message=FALSE, warning=FALSE}
+
+# Display the first 6 rows of the cleaned data using kable
+kable(head(cleaned_data, 6), "latex", booktabs = TRUE, 
+      caption = "Preview of First 6 Rows of Cleaned Data") %>%
+  kable_styling(latex_options = "HOLD_position", font_size = 9)
+```
+
+```{r table2, echo=FALSE, message=FALSE, warning=FALSE}
+
+# Define new column names
+new_col_names <- c("Year", "Total", "Average Clearance Rate")
+
+# Viewing the yearly summary table
+kable(yearly_summary, "latex", booktabs = TRUE, 
+      caption = "Yearly Summary of Clearance Rates", 
+      col.names = new_col_names,
+      label = "tab:dataextract2") %>%
+  kable_styling(latex_options = "HOLD_position", font_size = 9)
+
+```
+
+Table 2 presents a 'Yearly Summary of Clearance Rates' spanning from 2014 to 2022, showing the summary statistics of the mutate variable. A significant observation from this data is the noticeable downward trend in the average clearance rates for reported crimes. In 2014, the average clearance rate was recorded at 0.228, which has markedly declined to 0.134 by 2022. This reduction in clearance rates is more effectively illustrated through visual representation.
+
+# 3. **Graph**
+
+## Assessing the Effectiveness of Crime Solving
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+
+
+cleaned_data=read.csv("cleaned_toronto_shelters.csv")
+
+# Calculating the mean rate of cleared crime for each year
+yearly_means <- cleaned_data %>%
+  group_by(report_year) %>%
+  summarise(Mean_Rate_of_Cleared_Crime = mean(clearance_rate, na.rm = TRUE))
+
+
+```
+
+This analysis focuses on police effectiveness. This line graph figure outlines the average crime clearance rate from 2014 to 2022. With years marked on the x-axis and the clearance rate on the y-axis, it shows an initial clearance rate of just above 0.225 in 2014, followed by a consistent decline. The rate experienced a notable drop in 2017 and continued to decrease steadily, reaching just under 0.15 by 2022.
+
+
+```{r fig-crime, echo=FALSE, fig.cap=" Mean Rate of Cleared Crimes Over Years", message=FALSE, warning=FALSE}
+# Create a plot to show change of the mean rate of cleared crime
+ggplot(yearly_means, aes(x = report_year, y = Mean_Rate_of_Cleared_Crime)) +
+  geom_line(color = "blue") +
+  geom_point(color = "black") +
+  labs(x = "Year",
+       y = "Mean Rate of Cleared Crimes") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_continuous(breaks = unique(cleaned_data$report_year))
+```
+
+
+## Discussion 1
+
+This Figure 1 and the above table indicate a continuing decrease in police efficiency in solving crimes, with no immediate signs of improvement anticipated in the coming year. Conversely, research indicates that public perception of police effectiveness remains largely positive and may be affected by media. An analysis of leading Toronto media outlets, such as The Toronto Sun, The Toronto Star, and The Globe and Mail, reveals a notable trend. Despite statistics indicating a decrease in police efficiency, these publications increasingly portray police performance positively [@cite4]. For instance, The Toronto Sun reported 125 positive references to police actions compared to only 13 negative mentions. These data clarify how police efficacy differs between the media portrayed and the actual statistics.
+
+##  Categorizing Crime Types
+
+```{r fig-crime-subtypes, echo=FALSE, fig.cap="Number of Crimes Reported in Toronto by Subtype", fig.width=6, fig.height=3.2}
+
+
+ggplot(cleaned_data, aes(x = subtype, y = count_)) +
+  geom_point()+
+  theme_bw() +
+  theme(legend.key.size = unit(0.5, 'cm'))+
+  labs(x = "Year",
+       y = "Number of Crimes",
+       color = "Geographic Division"
+       ) +
+  coord_flip() 
+
+```
+
+In Figure 2, we present a point chart illustrating the variations in crime rates across different crime types over the course of several years. On the y-axis, various crime subtypes are listed, while the x-axis quantifies incident numbers. 'Theft Under \$5000' consistently shows high frequency, highlighting its prevalence. On the other hand, 'Attempted Murder' and 'Robbery - Financial' are rare, as indicated by their short bars. Subtypes like Assault, Auto Theft, and Break-and-Enter occupy intermediate positions.
+
+## Discussion 2
+
+Public perception often diverges from the data-driven reality of crime, a point highlighted by recent studies [@cite5]. High-profile crimes such as murder and aggravated assault, which dominate news cycles and capture public attention, are perceived to be more common than they are [@cite5]. In reality, statistical data shows that these violent crimes occur less frequently than non-violent offenses, like theft under \$5000, which predominate in crime reports. This contrast points to a significant insight: The enduring impactful crimes in society are often the more common, yet less sensational, offenses such as petty theft, despite the media's focus on more severe but rarer crimes.
+
+## Categorizing Reporting Divisions
+
+Figure 3 presents a graph that tracks crime incidents across different divisions from 2014 to 2022. The x-axis is segmented with labels ranging from D11 to D53 and an NSA category to differentiate the police divisions, while the y-axis measures the reported number of crimes. Utilizing a stacked bar chart, this visualization provides a detailed comparative analysis of crime trends within each division throughout the nine-year timeframe. The data visually identifies five police divisions--- D51, D52, and D55---with the highest crime counts, suggesting these areas are crime hotspots. In contrast, divisions D11, D12, and D13 have comparatively lower crime figures. The remaining divisions fall in between these two extremes. 
+
+```{r fig-crime-division, echo=FALSE, fig.cap=" Number of Crimes Reported in Toronto by Police Division", fig.width=6, fig.height=3.2}
+# Create a bar plot to show crime count by year and division
+ggplot(cleaned_data, aes(x = division, y = count_)) +
+  geom_point() +
+  labs(x = "Police Divisione",
+       y = "Number of Crimes",
+       color = "Year") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+```
+
+## Discussion 3
+
+This graph tracks crime incidents across Toronto's divisions, stressing a higher crime presence in divisions D51, D52, and D55. The map clarifies the location of these divisions, with a notable concentration in downtown Toronto (D51, D52, D55) versus a lower occurrence in North York (D32). This data contrasts with Toronto media reports, which often portray North York's crime levels as similar to downtown's [@cite6]. Our analysis demonstrates that North York experiences fewer crimes than the downtown area. This variance points to a media bias, suggesting North York is more crime-ridden than it is, and underscores the gap between media portrayal and actual crime statistics.
+
+# 4. Conclusion
+
+This study analyzes various types of crimes, their geographic distribution across Toronto, the most frequently reported crimes, and trends in crime resolution rates. A key observation is the diminishing efficacy of police in addressing crimes, notably theft under \$5,000, which is the most common crime in downtown Toronto. A critical issue identified is the disparity between the actual crime statistics and their representation in media reports. These findings highlight the necessity for accurate crime statistics dissemination and advocate for strategies to align media reports with factual data. Nonetheless, the study's credibility is somewhat compromised by omitting 'Crimes Against the Person' cases where the victim is unnamed, potentially distorting the overall crime picture. 
+\newpage
+
+# 5. References
